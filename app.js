@@ -252,13 +252,52 @@ console.log('- GET /api/upload/proxy/:type/:filename -> controllers/upload.contr
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../client/build')));
-
-  app.get('*', (req, res, next) => {
-    if (req.url.startsWith('/api')) return next();
-    res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
-  });
+  // Set static folder - use multiple possible paths to handle different deployment scenarios
+  const possibleClientPaths = [
+    path.join(__dirname, '../client/build'),         // Standard local development path
+    path.join(__dirname, '../../client/build'),      // When server.js is in root
+    path.join(process.cwd(), 'client/build'),        // Using current working directory
+    path.join(process.cwd(), '../client/build'),     // When in server subdirectory
+    '/opt/render/project/src/client/build'           // Render-specific path
+  ];
+  
+  // Find the first path that exists
+  let clientBuildPath = null;
+  for (const checkPath of possibleClientPaths) {
+    if (fs.existsSync(checkPath)) {
+      clientBuildPath = checkPath;
+      console.log(`Found client build files at: ${clientBuildPath}`);
+      break;
+    } else {
+      console.log(`Client build path not found at: ${checkPath}`);
+    }
+  }
+  
+  // If a valid path is found, serve static files
+  if (clientBuildPath) {
+    app.use(express.static(clientBuildPath));
+    
+    app.get('*', (req, res, next) => {
+      if (req.url.startsWith('/api')) return next();
+      res.sendFile(path.resolve(clientBuildPath, 'index.html'));
+    });
+  } else {
+    console.error('WARNING: No client build directory found. API will work but frontend will not be served.');
+    
+    // Add a simple HTML response for the root route when client files are missing
+    app.get('/', (req, res) => {
+      res.send(`
+        <html>
+          <head><title>FarmeRice API Server</title></head>
+          <body>
+            <h1>FarmeRice API Server</h1>
+            <p>The API server is running, but the client build files were not found.</p>
+            <p>API endpoints are available at /api/*</p>
+          </body>
+        </html>
+      `);
+    });
+  }
 }
 
 // Add health check endpoint
