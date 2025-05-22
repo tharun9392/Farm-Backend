@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rice Product Placeholder</title>
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .placeholder {
+      width: 300px;
+      height: 300px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .rice-image {
+      width: 60%;
+      height: 60%;
+      position: relative;
+      background-color: #e8f4ea;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .rice-grain {
+      position: absolute;
+      width: 20px;
+      height: 10px;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 50%;
+    }
+    .grain1 { left: 25%; top: 30%; transform: rotate(-20deg); }
+    .grain2 { right: 25%; top: 25%; transform: rotate(15deg); }
+    .grain3 { left: 30%; bottom: 30%; transform: rotate(30deg); }
+    .grain4 { right: 30%; bottom: 25%; transform: rotate(-10deg); }
+    .grain5 { left: 20%; top: 20%; transform: rotate(10deg); }
+    .grain6 { right: 20%; bottom: 20%; transform: rotate(-25deg); }
+    .bowl {
+      position: absolute;
+      width: 70%;
+      height: 25%;
+      bottom: -5%;
+      background-color: rgba(76, 175, 80, 0.2);
+      border: 1px solid #388e3c;
+      border-bottom-left-radius: 50%;
+      border-bottom-right-radius: 50%;
+    }
+    .title {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      color: #388e3c;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="placeholder">
+    <div class="rice-image">
+      <div class="rice-grain grain1"></div>
+      <div class="rice-grain grain2"></div>
+      <div class="rice-grain grain3"></div>
+      <div class="rice-grain grain4"></div>
+      <div class="rice-grain grain5"></div>
+      <div class="rice-grain grain6"></div>
+      <div class="bowl"></div>
+    </div>
+    <div class="title">Premium Rice</div>
+    <div class="subtitle">Image Placeholder</div>
+  </div>
+</body>
+</html> 

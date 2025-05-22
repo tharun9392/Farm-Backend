@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+      <rect width="200" height="200" fill="#f5f5f5"/>
+      <circle cx="100" cy="100" r="70" fill="#e8f4ea"/>
+      <ellipse cx="85" cy="90" rx="12" ry="6" transform="rotate(-20 85 90)" fill="#fff" stroke="#ddd" stroke-width="1"/>
+      <ellipse cx="110" cy="80" rx="12" ry="6" transform="rotate(15 110 80)" fill="#fff" stroke="#ddd" stroke-width="1"/>
+      <ellipse cx="90" cy="115" rx="12" ry="6" transform="rotate(30 90 115)" fill="#fff" stroke="#ddd" stroke-width="1"/>
+      <ellipse cx="120" cy="105" rx="12" ry="6" transform="rotate(-10 120 105)" fill="#fff" stroke="#ddd" stroke-width="1"/>
+      <ellipse cx="75" cy="70" rx="12" ry="6" transform="rotate(10 75 70)" fill="#fff" stroke="#ddd" stroke-width="1"/>
+      <ellipse cx="105" cy="125" rx="12" ry="6" transform="rotate(-25 105 125)" fill="#fff" stroke="#ddd" stroke-width="1"/>
+      <path d="M60,120 C60,150 140,150 140,120 L130,140 C130,155 70,155 70,140 Z" fill="#4caf50" opacity="0.2" stroke="#388e3c" stroke-width="1"/>
+      <text x="100" y="170" font-family="Arial, sans-serif" font-size="14" fill="#388e3c" text-anchor="middle" font-weight="bold">Premium Rice</text>
+      <text x="100" y="180" font-family="Arial, sans-serif" font-size="10" fill="#666" text-anchor="middle">Image Placeholder</text>
+    </svg>
