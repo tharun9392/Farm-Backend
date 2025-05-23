@@ -181,6 +181,66 @@ const getConversations = async (req, res, next) => {
 };
 
 /**
+ * Get all conversations for admin (list of all conversations in the system)
+ * @route GET /api/messages/admin/conversations
+ * @access Private (Admin only)
+ */
+const getAdminConversations = async (req, res, next) => {
+  try {
+    // Get all unique conversations
+    const conversations = await Message.aggregate([
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $group: {
+          _id: '$conversationId',
+          lastMessage: { $first: '$$ROOT' },
+          unreadCount: {
+            $sum: {
+              $cond: [
+                { $eq: ['$isRead', false] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $sort: { 'lastMessage.createdAt': -1 }
+      }
+    ]);
+
+    // Get both users in each conversation
+    const conversationsWithUsers = await Promise.all(conversations.map(async (conv) => {
+      const lastMessage = conv.lastMessage;
+      
+      const [user1, user2] = await Promise.all([
+        User.findById(lastMessage.sender).select('name avatar role'),
+        User.findById(lastMessage.receiver).select('name avatar role')
+      ]);
+      
+      return {
+        conversationId: conv._id,
+        users: [user1, user2],
+        lastMessage: {
+          content: lastMessage.content,
+          createdAt: lastMessage.createdAt,
+          senderId: lastMessage.sender,
+          isRead: lastMessage.isRead
+        },
+        unreadCount: conv.unreadCount
+      };
+    }));
+
+    res.json({ conversations: conversationsWithUsers });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Mark message as read
  * @route PUT /api/messages/:id/read
  * @access Private
@@ -233,6 +293,7 @@ module.exports = {
   sendMessage,
   getConversation,
   getConversations,
+  getAdminConversations,
   markAsRead,
   getUnreadCount
 }; 

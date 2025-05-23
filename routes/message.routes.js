@@ -6,11 +6,15 @@ const {
   getConversation,
   getConversations,
   markAsRead,
-  getUnreadCount
+  getUnreadCount,
+  getAdminConversations
 } = require('../controllers/message.controller');
 
 // Get all conversations for the current user
 router.get('/conversations', protect, getConversations);
+
+// Get all conversations for admin
+router.get('/admin/conversations', protect, authorize(['admin']), getAdminConversations);
 
 // Get specific conversation with another user
 router.get('/conversation/:userId', protect, getConversation);
