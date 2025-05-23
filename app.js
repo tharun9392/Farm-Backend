@@ -51,21 +51,24 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter); // Apply rate limiting to all API routes
 
-// Enable CORS for the API - more permissive for development hellooooo
+// Enable CORS for the API - more permissive for development
 const corsOptions = {
   origin: [
     'http://localhost:3000',
     'http://localhost:3001',
     'https://farmerice.netlify.app',
+    'https://farmerice-app.netlify.app',
     process.env.NODE_ENV === 'development' ? '*' : undefined
   ].filter(Boolean),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
-  credentials: true, // Allow cookies to be sent with requests
+  credentials: true,
   exposedHeaders: ['Content-Disposition'],
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
+
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
 // Body parser middleware
