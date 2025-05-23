@@ -53,7 +53,12 @@ app.use('/api/', limiter); // Apply rate limiting to all API routes
 
 // Enable CORS for the API - more permissive for development
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3001', '*'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://farmerice.netlify.app',
+    process.env.NODE_ENV === 'development' ? '*' : undefined
+  ].filter(Boolean),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
   credentials: true, // Allow cookies to be sent with requests
@@ -210,6 +215,16 @@ if (process.env.NODE_ENV === 'development') {
   }));
 }
 
+// Add route for favicon.ico to prevent 404 errors
+app.get('/favicon.ico', (req, res) => {
+  const faviconPath = path.join(__dirname, 'public', 'favicon.ico');
+  if (fs.existsSync(faviconPath)) {
+    return res.sendFile(faviconPath);
+  }
+  // If favicon doesn't exist, return a 204 (No Content)
+  res.status(204).end();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -258,12 +273,18 @@ if (process.env.NODE_ENV === 'production') {
     path.join(__dirname, '../../client/build'),      // When server.js is in root
     path.join(process.cwd(), 'client/build'),        // Using current working directory
     path.join(process.cwd(), '../client/build'),     // When in server subdirectory
-    '/opt/render/project/src/client/build'           // Render-specific path
+    '/opt/render/project/src/client/build',          // Render-specific path
+    '/opt/render/project/client/build',              // Another Render path
+    path.join(__dirname, '../build'),                // If build is directly in project root
+    path.join(process.cwd(), 'build'),               // Build in current directory
+    path.join(__dirname, '../client'),               // If build was copied to client folder
+    path.join(process.cwd(), 'client')               // Client folder in current directory
   ];
   
   // Find the first path that exists
   let clientBuildPath = null;
   for (const checkPath of possibleClientPaths) {
+    console.log(`Checking for client build at: ${checkPath}`);
     if (fs.existsSync(checkPath)) {
       clientBuildPath = checkPath;
       console.log(`Found client build files at: ${clientBuildPath}`);
@@ -275,11 +296,28 @@ if (process.env.NODE_ENV === 'production') {
   
   // If a valid path is found, serve static files
   if (clientBuildPath) {
-    app.use(express.static(clientBuildPath));
+    // Make express serve static files with better error handling
+    app.use(express.static(clientBuildPath, {
+      maxAge: '1d', // Cache for 1 day
+      fallthrough: true, // Fall through to next middleware if file not found
+      index: 'index.html',
+      // Add an error handler to catch file serving errors
+      setHeaders: (res, path, stat) => {
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+      }
+    }));
     
+    // For any other route (that's not an API route), send the React app
     app.get('*', (req, res, next) => {
       if (req.url.startsWith('/api')) return next();
-      res.sendFile(path.resolve(clientBuildPath, 'index.html'));
+      
+      // Try to send the index.html file
+      try {
+        res.sendFile(path.resolve(clientBuildPath, 'index.html'));
+      } catch (error) {
+        console.error(`Error sending index.html: ${error.message}`);
+        res.status(500).send('Error loading application. Please try again later.');
+      }
     });
   } else {
     console.error('WARNING: No client build directory found. API will work but frontend will not be served.');
