@@ -51,7 +51,7 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter); // Apply rate limiting to all API routes
 
-// Enable CORS for the API - more permissive for development
+// Enable CORS for the API - more permissive for development hellooooo
 const corsOptions = {
   origin: [
     'http://localhost:3000',
