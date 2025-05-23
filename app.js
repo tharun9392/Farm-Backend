@@ -267,75 +267,81 @@ console.log('- GET /api/upload/proxy/:type/:filename -> controllers/upload.contr
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder - use multiple possible paths to handle different deployment scenarios
-  const possibleClientPaths = [
-    path.join(__dirname, '../client/build'),         // Standard local development path
-    path.join(__dirname, '../../client/build'),      // When server.js is in root
-    path.join(process.cwd(), 'client/build'),        // Using current working directory
-    path.join(process.cwd(), '../client/build'),     // When in server subdirectory
-    '/opt/render/project/src/client/build',          // Render-specific path
-    '/opt/render/project/client/build',              // Another Render path
-    path.join(__dirname, '../build'),                // If build is directly in project root
-    path.join(process.cwd(), 'build'),               // Build in current directory
-    path.join(__dirname, '../client'),               // If build was copied to client folder
-    path.join(process.cwd(), 'client')               // Client folder in current directory
-  ];
+  // Set static folder
+  const clientBuildPath = '/opt/render/project/src/client/build';
   
-  // Find the first path that exists
-  let clientBuildPath = null;
-  for (const checkPath of possibleClientPaths) {
-    console.log(`Checking for client build at: ${checkPath}`);
-    if (fs.existsSync(checkPath)) {
-      clientBuildPath = checkPath;
-      console.log(`Found client build files at: ${clientBuildPath}`);
-      break;
-    } else {
-      console.log(`Client build path not found at: ${checkPath}`);
-    }
-  }
+  console.log('Production mode: Setting up static file serving');
+  console.log(`Checking for client build at: ${clientBuildPath}`);
   
-  // If a valid path is found, serve static files
-  if (clientBuildPath) {
-    // Make express serve static files with better error handling
-    app.use(express.static(clientBuildPath, {
-      maxAge: '1d', // Cache for 1 day
-      fallthrough: true, // Fall through to next middleware if file not found
-      index: 'index.html',
-      // Add an error handler to catch file serving errors
-      setHeaders: (res, path, stat) => {
-        res.setHeader('Cache-Control', 'public, max-age=86400');
-      }
-    }));
+  if (fs.existsSync(clientBuildPath)) {
+    console.log('Found client build directory. Setting up static file serving...');
     
-    // For any other route (that's not an API route), send the React app
+    // Serve static files
+    app.use(express.static(clientBuildPath));
+    
+    // Handle React routing
     app.get('*', (req, res, next) => {
-      if (req.url.startsWith('/api')) return next();
-      
-      // Try to send the index.html file
-      try {
-        res.sendFile(path.resolve(clientBuildPath, 'index.html'));
-      } catch (error) {
-        console.error(`Error sending index.html: ${error.message}`);
-        res.status(500).send('Error loading application. Please try again later.');
+      if (req.url.startsWith('/api')) {
+        return next();
       }
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
     });
   } else {
-    console.error('WARNING: No client build directory found. API will work but frontend will not be served.');
+    console.log('Client build directory not found. Setting up API-only mode...');
     
-    // Add a simple HTML response for the root route when client files are missing
+    // API Documentation route
     app.get('/', (req, res) => {
-      res.send(`
+      res.status(200).send(`
+        <!DOCTYPE html>
         <html>
-          <head><title>FarmeRice API Server</title></head>
+          <head>
+            <title>FarmeRice API Server</title>
+            <style>
+              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+              h1 { color: #2c5282; }
+              .endpoint { background: #f7fafc; padding: 10px; margin: 10px 0; border-radius: 4px; }
+              .api-list { list-style: none; padding: 0; }
+              .api-list li { margin: 5px 0; }
+            </style>
+          </head>
           <body>
             <h1>FarmeRice API Server</h1>
-            <p>The API server is running, but the client build files were not found.</p>
-            <p>API endpoints are available at /api/*</p>
+            <p>The API server is running successfully. Frontend files are not being served in API-only mode.</p>
+            <h2>Available API Endpoints:</h2>
+            <div class="endpoint">
+              <ul class="api-list">
+                <li>🔐 /api/auth - Authentication endpoints</li>
+                <li>👤 /api/users - User management</li>
+                <li>🌾 /api/products - Product operations</li>
+                <li>🛒 /api/orders - Order management</li>
+                <li>📦 /api/inventory - Inventory tracking</li>
+                <li>💰 /api/payments - Payment processing</li>
+                <li>⭐ /api/reviews - Product reviews</li>
+                <li>📊 /api/sales - Sales tracking</li>
+                <li>💬 /api/messages - Messaging system</li>
+                <li>✅ /api/tasks - Task management</li>
+                <li>📈 /api/reports - Reporting system</li>
+                <li>🔔 /api/notifications - Notification system</li>
+                <li>🚚 /api/deliveries - Delivery management</li>
+                <li>📢 /api/announcements - Announcements</li>
+                <li>📤 /api/upload - File uploads</li>
+              </ul>
+            </div>
+            <p>For frontend access, please visit: <a href="https://farmerice.netlify.app">https://farmerice.netlify.app</a></p>
           </body>
         </html>
       `);
     });
   }
+} else {
+  // Development mode - serve a simple message
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      status: 'success',
+      message: 'FarmeRice API is running in development mode',
+      docs: 'API endpoints are available at /api/*'
+    });
+  });
 }
 
 // Add health check endpoint
