@@ -15,46 +15,35 @@ try {
 
 const app = require('./app');
 
-// Use PORT from environment variable with fallback to 5015 for Render.com
-const PORT = process.env.PORT || 5015;
-console.log("Using PORT:", PORT);
+// Use environment PORT or fallback to 5015 (Render.com default)
+const PORT = parseInt(process.env.PORT || '5015', 10);
+console.log("Server will listen on PORT:", PORT);
 let server;
 
 // Start server
 const startServer = async () => {
   try {
-    // Connect to database (but don't fail if connection fails)
+    // Connect to database
     await connectDB();
 
-    // Start the server
-    server = app.listen(PORT, () => {
+    // Create HTTP server
+    server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`Server is running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+      logger.info(`Server is bound to all network interfaces (0.0.0.0)`);
     });
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (err) => {
       logger.error(`Unhandled Rejection: ${err.message}`);
       logger.error(err.stack);
-      
-      // Close server & exit process
-      if (server) {
-        server.close(() => process.exit(1));
-      } else {
-        process.exit(1);
-      }
+      shutdownGracefully('UNHANDLED_REJECTION');
     });
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (err) => {
       logger.error(`Uncaught Exception: ${err.message}`);
       logger.error(err.stack);
-      
-      // Close server & exit process
-      if (server) {
-        server.close(() => process.exit(1));
-      } else {
-        process.exit(1);
-      }
+      shutdownGracefully('UNCAUGHT_EXCEPTION');
     });
 
     // Generate some sample product images on startup to avoid 404 errors
@@ -77,7 +66,7 @@ const startServer = async () => {
         const files = fs.readdirSync(uploadDir);
         if (files.length === 0) {
           console.log('No product images found, generating sample images...');
-          const images = generateSampleImages(5);
+          const images = await generateSampleImages(5);
           console.log(`Generated ${images.length} sample product images`);
         } else {
           console.log(`Found ${files.length} existing product images`);
@@ -98,25 +87,26 @@ const shutdownGracefully = async (signal) => {
   
   if (server) {
     try {
-      // Close HTTP server
-      await new Promise((resolve) => server.close(resolve));
+      // Close HTTP server first
+      await new Promise((resolve, reject) => {
+        server.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
       logger.info('HTTP server closed');
-      
-      // Close MongoDB connection
-      await mongoose.connection.close();
-      logger.info('MongoDB connection closed');
-      
+
+      // Then close MongoDB connection
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.connection.close();
+        logger.info('MongoDB connection closed');
+      }
+
       process.exit(0);
     } catch (error) {
       logger.error(`Error during graceful shutdown: ${error.message}`);
       process.exit(1);
     }
-    
-    // Force exit after 3 seconds if connections don't close
-    setTimeout(() => {
-      logger.error('Could not close connections in time, forcefully shutting down');
-      process.exit(1);
-    }, 3000);
   } else {
     process.exit(0);
   }
