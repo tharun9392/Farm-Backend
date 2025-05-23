@@ -57,19 +57,24 @@ const corsOptions = {
     'http://localhost:3000',
     'http://localhost:3001',
     'https://farmerice.netlify.app',
-    'https://farmerice-app.netlify.app',
+    'https://farmerice-echi.onrender.com',
+    process.env.FRONTEND_URL,
     process.env.NODE_ENV === 'development' ? '*' : undefined
   ].filter(Boolean),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
   credentials: true,
   exposedHeaders: ['Content-Disposition'],
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // 24 hours
 };
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors(corsOptions));
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
