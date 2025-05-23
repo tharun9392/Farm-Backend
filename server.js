@@ -15,9 +15,9 @@ try {
 
 const app = require('./app');
 
-// Force port to be 3001
-const PORT = 3001;
-console.log("FORCED PORT:", PORT);
+// Use PORT from environment variable with fallback to 5015 for Render.com
+const PORT = process.env.PORT || 5015;
+console.log("Using PORT:", PORT);
 let server;
 
 // Start server
@@ -97,21 +97,26 @@ const shutdownGracefully = async (signal) => {
   logger.info(`${signal} received. Shutting down gracefully...`);
   
   if (server) {
-    server.close(() => {
+    try {
+      // Close HTTP server
+      await new Promise((resolve) => server.close(resolve));
       logger.info('HTTP server closed');
       
       // Close MongoDB connection
-      mongoose.connection.close(false, () => {
-        logger.info('MongoDB connection closed');
-        process.exit(0);
-      });
+      await mongoose.connection.close();
+      logger.info('MongoDB connection closed');
       
-      // Force exit after 3 seconds if connections don't close
-      setTimeout(() => {
-        logger.error('Could not close connections in time, forcefully shutting down');
-        process.exit(1);
-      }, 3000);
-    });
+      process.exit(0);
+    } catch (error) {
+      logger.error(`Error during graceful shutdown: ${error.message}`);
+      process.exit(1);
+    }
+    
+    // Force exit after 3 seconds if connections don't close
+    setTimeout(() => {
+      logger.error('Could not close connections in time, forcefully shutting down');
+      process.exit(1);
+    }, 3000);
   } else {
     process.exit(0);
   }
