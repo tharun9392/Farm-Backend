@@ -204,10 +204,6 @@ docker run -p 3000:3000 farm-backend
 - Supports deployment on any Node.js hosting platform
 - Environment variable configuration required
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -215,10 +211,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-## 📞 Support
-
-For support, email [support@example.com](mailto:support@example.com) or create an issue in the repository.
 
 ## ✨ Acknowledgments
 
